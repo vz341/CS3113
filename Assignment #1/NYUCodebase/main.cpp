@@ -3,8 +3,6 @@
 CS3113
 Assignment #1
 
-Vivian Zhao
-N10586937
 vz341
 
 */
