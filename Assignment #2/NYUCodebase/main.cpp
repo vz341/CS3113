@@ -32,7 +32,7 @@ SDL_Window* displayWindow;
 
 class Paddle {
 public:
-	Paddle(float lt, float rt, float tp, float bm) : left(lt), right(rt), top(tp), bottom(bm) {}
+	Paddle(float left, float right, float top, float bottom) : left(left), right(right), top(top), bottom(bottom) {}
 
 	float left;
 	float right;
@@ -48,22 +48,23 @@ public:
 
 	float x_position = 0.0f;
 	float y_position = 0.0f;
-	float speed = 0.05f;
-	float acceleration = 0.0025f;
-	float x_direction = (float)rand();
-	float y_direction = (float)rand();
+	float speed = 0.5f;
+	float acceleration = 10.0f;
+	float x_direction = (float)(rand() % 4 + 1);
+	float y_direction = (float)(rand() % 10 - 5);
 
 	void reset() {
 		x_position = 0.0f;
-		y_position = 0.0f;
-		speed = 0.05f;
-		x_direction = (float)rand();
-		y_direction = (float)rand();
+		y_direction = 0.0f;
+		speed = 0.5f;
+		acceleration = 10.0f;
+		x_direction = (float)(rand() % 4 + 1);
+		y_direction = (float)(rand() % 10 - 5);
 	}
 
-	void move() {
-		x_position += (speed * x_direction);
-		y_position += (speed * y_direction);
+	void move(float elapsed) {
+		x_position += (speed * x_direction * elapsed);
+		y_position += (speed * y_direction * elapsed);
 	}
 };
 
@@ -93,12 +94,16 @@ GLuint LoadTexture(const char *filePath) {
 int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	displayWindow = SDL_CreateWindow("Assignment #2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1600, 900, SDL_WINDOW_OPENGL);
+	displayWindow = SDL_CreateWindow("Assignment #2", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 360, SDL_WINDOW_OPENGL);
 	SDL_GLContext context = SDL_GL_CreateContext(displayWindow);
 	SDL_GL_MakeCurrent(displayWindow, context);
 	#ifdef _WINDOWS
 		glewInit();
 	#endif
+
+	//Setup (before the loop)
+
+	glViewport(0, 0, 640, 360);
 
 	//Need to use a shader program that supports textures!
 	ShaderProgram program(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
@@ -138,18 +143,15 @@ int main(int argc, char *argv[])
 				done = true;
 			}
 			else if (event.type == SDL_KEYDOWN) {
-				if (event.key.keysym.scancode == SDL_SCANCODE_SPACE || event.key.keysym.scancode == SDL_SCANCODE_RETURN) {
-					//DO AN ACTION WHEN SPACE IS PRESSED!
-					if (!startGame) {
-						startGame = true;
-					}
+				if (event.key.keysym.scancode == SDL_SCANCODE_SPACE && !startGame) {
+					startGame = true;
 				}
 				if (event.key.keysym.scancode == SDL_SCANCODE_W && leftPaddle.top < 2.0f) {
 					leftPaddle.top += 0.3f;
 					leftPaddle.bottom += 0.3f;
 					leftPaddleMatrix.Translate(0.0f, 0.3f, 0.0f);
 				}
-				if (event.key.keysym.scancode == SDL_SCANCODE_S && leftPaddle.bottom > -2.0f) {
+				else if (event.key.keysym.scancode == SDL_SCANCODE_S && leftPaddle.bottom > -2.0f) {
 					leftPaddle.top -= 0.3f;
 					leftPaddle.bottom -= 0.3f;
 					leftPaddleMatrix.Translate(0.0f, -0.3f, 0.0f);
@@ -159,15 +161,13 @@ int main(int argc, char *argv[])
 					rightPaddle.bottom += 0.3f;
 					rightPaddleMatrix.Translate(0.0f, 0.3f, 0.0f);
 				}
-				if (event.key.keysym.scancode == SDL_SCANCODE_DOWN && rightPaddle.bottom > -2.0f) {
+				else if (event.key.keysym.scancode == SDL_SCANCODE_DOWN && rightPaddle.bottom > -2.0f) {
 					rightPaddle.top -= 0.3f;
 					rightPaddle.bottom -= 0.3f;
 					rightPaddleMatrix.Translate(0.0f, -0.3f, 0.0f);
 				}
 			}
 		}
-
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 		//Clears the screen to the set clear color.
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 		program.setProjectionMatrix(projectionMatrix);
 		program.setViewMatrix(viewMatrix);
 
-		float texCoords[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f };
+		float texCoords[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f };
 
 		//Defines an array of vertex data.
 		float leftPaddleTexCoords[] = { -3.5f, -0.5f, -3.4f, -0.5f, -3.4f, 0.5f, -3.4f, 0.5f, -3.5f, 0.5f, -3.5f, -0.5f };
@@ -239,42 +239,33 @@ int main(int argc, char *argv[])
 		//We will use this value to move everything in our game.
 
 		if (startGame) {
-			if (ball.y_position + 0.1f >= 2.0f || ball.y_position - 0.1f <= -2.0f) {
-				ball.y_direction *= -1;
-				ball.speed += ball.acceleration;
-				ball.move();
-				ballMatrix.Translate(ball.speed * ball.x_direction, ball.speed * ball.y_direction, 0.0f);
-			}
-
-			else if ((ball.x_position - 0.1f <= leftPaddle.right && ball.y_position - 0.1f <= leftPaddle.top && ball.y_position + 0.1f >= leftPaddle.bottom) || (ball.x_position + 0.1f >= rightPaddle.left && ball.y_position - 0.1f <= rightPaddle.top && ball.y_position + 0.1f >= rightPaddle.bottom)) {
+			if (ball.x_position <= leftPaddle.right && ball.y_position <= leftPaddle.top && ball.y_position >= leftPaddle.bottom || ball.x_position >= rightPaddle.left && ball.y_position <= rightPaddle.top && ball.y_position >= rightPaddle.bottom) {
 				ball.x_direction *= -1;
-				ball.speed += ball.acceleration;
-				ball.move();
-				ballMatrix.Translate((ball.speed * ball.x_direction), (ball.speed * ball.y_direction), 0.0f);
+				ball.speed += ball.acceleration * elapsed;
+				ball.move(elapsed);
+				ballMatrix.Translate((ball.speed * ball.x_direction * elapsed), (ball.speed * ball.y_direction * elapsed), 0.0f);
 			}
-			else if (ball.x_position - 0.1f <= leftPaddle.left) {
+			else if (ball.x_position >= rightPaddle.right) {
 				startGame = false;
 				ballMatrix.Translate(-ball.x_position, -ball.y_position, 0.0f);
-				ball.x_position = 0.0f;
-				ball.y_position = 0.0f;
-				ball.x_direction = (float)rand() / (float)RAND_MAX;
-				ball.y_direction = (float)rand() / (float)RAND_MAX;
-				ball.speed = 0.05f;
-				std::cout << "Winner: Right Player!\n";
+				ball.reset();
+				std::cout << "Winner: Left Side!\n";
 			}
-			else if (ball.x_position + 0.1f >= rightPaddle.right) {
+			else if (ball.x_position <= leftPaddle.left) {
 				startGame = false;
 				ballMatrix.Translate(-ball.x_position, -ball.y_position, 0.0f);
-				ball.x_position = 0.0f;
-				ball.y_position = 0.0f;
-				ball.x_direction = (float)rand() / (float)RAND_MAX;
-				ball.y_direction = (float)rand() / (float)RAND_MAX;
-				ball.speed = 0.05f;
-				std::cout << "Winner: Left Player!\n";
+				ball.reset();
+				std::cout << "Winner: Right Side!\n";
+			}
+			else if (ball.y_position + 0.1f >= 2.25f || ball.y_position - 0.1f <= -2.25f) {
+				ball.y_direction *= -1;
+				ball.speed += ball.acceleration * elapsed;
+				ball.move(elapsed);
+				ballMatrix.Translate((ball.speed * ball.x_direction * elapsed), (ball.speed * ball.y_direction * elapsed), 0.0f);
 			}
 			else {
-				ball.move();
-				ballMatrix.Translate((ball.speed * ball.x_direction), (ball.speed * ball.y_direction), 0.0f);
+				ball.move(elapsed);
+				ballMatrix.Translate((ball.speed * ball.x_direction * elapsed), (ball.speed * ball.y_direction * elapsed), 0.0f);
 			}
 		}
 
