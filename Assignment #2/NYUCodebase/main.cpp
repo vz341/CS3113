@@ -44,7 +44,7 @@ class Ball {
 public:
 	Ball(float xPosition, float yPosition, float sd, float an, float xDirection, float yDirection) : x_position(xPosition), y_position(yPosition), speed(sd), acceleration(an), x_direction(xDirection), y_direction(yDirection) {}
 
-	Ball();
+	Ball() {}
 
 	float x_position = 0.0f;
 	float y_position = 0.0f;
