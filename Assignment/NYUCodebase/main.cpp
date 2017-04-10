@@ -45,13 +45,13 @@ Matrix viewMatrix;
 
 GLuint fontTexture;
 GLuint meteorTexture;
-GLuint distantStar1Texture;
-GLuint distantStar2Texture;
-GLuint distantStar3Texture;
 GLuint distantMeteor1Texture;
 GLuint distantMeteor2Texture;
 GLuint distantMeteor3Texture;
 GLuint distantMeteor4Texture;
+GLuint distantStar1Texture;
+GLuint distantStar2Texture;
+GLuint distantStar3Texture;
 
 enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER };
 
@@ -523,10 +523,6 @@ public:
 
 };
 
-std::vector<Entity> meteors;
-std::vector<Entity> distantStars;
-std::vector<Entity> distantMeteors;
-
 void RenderMainMenu() {
 	modelMatrix.identity();
 	modelMatrix.Translate(-1.7f, 0.2f, 0.0f);
@@ -539,6 +535,10 @@ void RenderMainMenu() {
 	DrawText(program, fontTexture, "TO SEE WHAT HAPPENS IN SPACE", 0.2f, 0.0001f);
 }
 
+std::vector<Entity> meteors;
+std::vector<Entity> distantMeteors;
+std::vector<Entity> distantStars;
+
 void RenderGameLevel() {
 	viewMatrix.identity();
 	program->setViewMatrix(viewMatrix);
@@ -546,11 +546,11 @@ void RenderGameLevel() {
 	for (size_t i = 0; i < meteors.size(); i++) {
 		meteors[i].draw();
 	}
-	for (size_t i = 0; i < distantStars.size(); i++) {
-		distantStars[i].draw();
-	}
 	for (size_t i = 0; i < distantMeteors.size(); i++) {
 		distantMeteors[i].draw();
+	}
+	for (size_t i = 0; i < distantStars.size(); i++) {
+		distantStars[i].draw();
 	}
 }
 
@@ -633,6 +633,11 @@ int main(int argc, char *argv[])
 	meteors.push_back(Entity(-2.0f, -0.2f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, meteorTexture, 5.0f, 10.0f, 0.4f));
 	meteors.push_back(Entity(1.0f, 0.1f, 0.0f, 0.0f, 1.0f, 1.0f, -1.0f, 0.0f, meteorTexture, 16.0f, 8.0f, 0.2f));
 
+	distantMeteors.push_back(Entity(0.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor1Texture, 2.0f, 2.0f, 0.0f));
+	distantMeteors.push_back(Entity(1.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor2Texture, 2.0f, 2.0f, 0.0f));
+	distantMeteors.push_back(Entity(2.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor3Texture, 1.0f, 1.0f, 0.0f));
+	distantMeteors.push_back(Entity(3.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor4Texture, 1.0f, 1.0f, 0.0f));
+
 	distantStars.push_back(Entity(-1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantStar3Texture, 1.0f, 1.0f, 0.0f));
 	distantStars.push_back(Entity(-2.0f, 2.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantStar1Texture, 1.0f, 1.0f, 0.0f));
 	distantStars.push_back(Entity(-3.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantStar2Texture, 1.0f, 1.0f, 0.0f));
@@ -642,11 +647,6 @@ int main(int argc, char *argv[])
 	distantStars.push_back(Entity(1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantStar1Texture, 1.0f, 1.0f, 0.0f));
 	distantStars.push_back(Entity(2.0f, 2.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantStar3Texture, 1.0f, 1.0f, 0.0f));
 	distantStars.push_back(Entity(3.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantStar2Texture, 1.0f, 1.0f, 0.0f));
-
-	distantMeteors.push_back(Entity(0.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor1Texture, 2.0f, 2.0f, 0.0f));
-	distantMeteors.push_back(Entity(1.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor2Texture, 2.0f, 2.0f, 0.0f));
-	distantMeteors.push_back(Entity(2.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor3Texture, 1.0f, 1.0f, 0.0f));
-	distantMeteors.push_back(Entity(3.0f, -1.9f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, distantMeteor4Texture, 1.0f, 1.0f, 0.0f));
 
 	SDL_Event event;
 	bool done = false;
