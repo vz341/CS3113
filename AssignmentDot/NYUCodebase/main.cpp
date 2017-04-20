@@ -27,8 +27,6 @@ vz341
 //Include SDL_mixer header.
 #include <SDL_mixer.h>
 
-#include <vector>
-
 #include "ShaderProgram.h"
 #include "Matrix.h"
 
@@ -40,65 +38,15 @@ vz341
 
 SDL_Window* displayWindow;
 
-bool start = true;
-
-void DrawText(ShaderProgram *program, int fontTexture, std::string text, float size, float spacing) {
-	float textureSize = 1.0 / 16.0f;
-
-	std::vector<float> vertexData;
-	std::vector<float> texCoordData;
-
-	for (size_t i = 0; i < text.size(); i++) {
-
-		float x_texture = (float)(((int)text[i]) % 16) / 16.0f;
-		float y_texture = (float)(((int)text[i]) / 16) / 16.0f;
-
-		vertexData.insert(vertexData.end(), {
-			((size + spacing) * i) + (-0.5f * size), 0.5f * size,
-			((size + spacing) * i) + (-0.5f * size), -0.5f * size,
-			((size + spacing) * i) + (0.5f * size), 0.5f * size,
-			((size + spacing) * i) + (0.5f * size), -0.5f * size,
-			((size + spacing) * i) + (0.5f * size), 0.5f * size,
-			((size + spacing) * i) + (-0.5f * size), -0.5f * size,
-		});
-
-		texCoordData.insert(texCoordData.end(), {
-			x_texture, y_texture,
-			x_texture, y_texture + textureSize,
-			x_texture + textureSize, y_texture,
-			x_texture + textureSize, y_texture + textureSize,
-			x_texture + textureSize, y_texture,
-			x_texture, y_texture + textureSize,
-		});
-	}
-
-	glUseProgram(program->programID);
-
-	//Enabling blending
-
-	glEnable(GL_BLEND);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertexData.data());
-	glEnableVertexAttribArray(program->positionAttribute);
-
-	glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoordData.data());
-	glEnableVertexAttribArray(program->texCoordAttribute);
-
-	glDrawArrays(GL_TRIANGLES, 0, text.size() * 6);
-
-	//Bind a texture to a texture target.
-	glBindTexture(GL_TEXTURE_2D, fontTexture);
-
-	glDisableVertexAttribArray(program->positionAttribute);
-	glDisableVertexAttribArray(program->texCoordAttribute);
-
-	//draw this data (use the .data() method of std::vector to get pointer to data)
-}
-
 GLuint LoadTexture(const char *filePath) {
-	SDL_Surface* surface = IMG_Load(filePath);
+	//Use stbi_load function to load the pixel data from an image file.
+	int w, h, comp;
+	unsigned char* image = stbi_load(filePath, &w, &h, &comp, STBI_rgb_alpha);
+
+	if (image == NULL) {
+		std::cout << "Unable to load image. Make sure the path is correct\n";
+		assert(false);
+	}
 
 	//Generates a new OpenGL texture ID.
 	GLuint retTexture;
@@ -107,7 +55,7 @@ GLuint LoadTexture(const char *filePath) {
 	glBindTexture(GL_TEXTURE_2D, retTexture);
 	//Our texture target is always going to be GL_TEXTURE_2D
 	//Sets the texture data of the specified texture target. Image format must be GL_RGBA for RGBA images or GL_RGB for RGB images.
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 
 	//Sets a texture parameter of the specified texture target.
 	//We MUST set the texture filtering parameters GL_TEXTURE_MIN_FILTER and GL_TEXTURE_MAG_FILTER before the texture can be used.
@@ -115,8 +63,8 @@ GLuint LoadTexture(const char *filePath) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	//Use GL_LINEAR for linear filtering and GL_NEAREST for nearest neighbor filtering.
 
-	SDL_FreeSurface(surface);
-
+	//After you are done with the image data, you must free it using the stbi_image_free function.
+	stbi_image_free(image);
 	return retTexture;
 }
 
@@ -155,8 +103,8 @@ int main(int argc, char *argv[])
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	float cheeseburgerPosition = 0.0f;
-	float hotdogPosition = 0.0f;
+	float cheeseburgerPosition = -2.0f;
+	float hotdogPosition = 2.0f;
 
 	float angle = 0.0f;
 
@@ -200,9 +148,6 @@ int main(int argc, char *argv[])
 				done = true;
 			}
 			else if (event.type == SDL_KEYDOWN) {
-				if (event.key.keysym.scancode == SDL_SCANCODE_SPACE && !start) {
-					start = true;
-				}
 				if (event.key.keysym.scancode == SDL_SCANCODE_A) {
 					//Playing a sound.
 
@@ -279,7 +224,7 @@ int main(int argc, char *argv[])
 		glBindTexture(GL_TEXTURE_2D, cheeseburgerTexture);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(cheeseburgerPosition, 1.0f, 1.0f);
+		modelMatrix.Translate(cheeseburgerPosition, 0.0f, 0.0f);
 
 		program.setModelMatrix(modelMatrix);
 
@@ -301,7 +246,7 @@ int main(int argc, char *argv[])
 		glBindTexture(GL_TEXTURE_2D, hotdogTexture);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(hotdogPosition, -1.0f, -1.0f);
+		modelMatrix.Translate(hotdogPosition, 0.0f, 0.0f);
 
 		program.setModelMatrix(modelMatrix);
 
