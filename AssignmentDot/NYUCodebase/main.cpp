@@ -16,16 +16,16 @@ vz341
 #include <SDL_opengl.h>
 #include <SDL_image.h>
 
+//Initializing SDL_mixer
+
+//Include SDL_mixer header.
+#include <SDL_mixer.h>
+
 //Include stb_image header.
 //NOTE: You must define STB_IMAGE_IMPLEMENTATION in one of the files you are including it from!
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-//Initializing SDL_mixer
-
-//Include SDL_mixer header.
-#include <SDL_mixer.h>
 
 #include "ShaderProgram.h"
 #include "Matrix.h"
