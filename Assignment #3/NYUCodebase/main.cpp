@@ -213,8 +213,6 @@ class Entity {
 		Entity(float x, float y) {
 			this->x = x;
 			this->y = y;
-			modelMatrix.identity();
-			modelMatrix.Translate(x, y, 0);
 		}
 
 		void Draw(ShaderProgram *program) {
@@ -224,6 +222,9 @@ class Entity {
 		float x = 0.0f;
 		float y = 0.0f;
 
+		float left = x - 0.05f;
+		float right = x + 0.05f;
+
 		float velocity;
 
 		//float rotation;
@@ -232,38 +233,23 @@ class Entity {
 
 		SheetSprite sprite;
 
-		void MoveInXDirection(float distance);
-
-		void Update(float elapsed);
+		//void Update(float elapsed);
 };
 
 Entity player;
-
-void Entity::MoveInXDirection(float distance) {
-	x + distance;
-}
-
-void Entity::Update(float elapsed) {
-	if (leftMovement == true) {
-		player.x -= velocity * elapsed;
-	}
-	else if (rightMovement == true) {
-		player.x += velocity * elapsed;
-	}
-	if (projectileMovement = true) {
-
-	}
-}
 
 //Entities are a useful way for us to think about objects in the game.
 
 std::vector<Entity> entities;
 
+
+/*
 void Update(float elapsed) {
 	for (int i = 0; i < entities.size(); i++) {
 		entities[i].Update(elapsed);
 	}
 }
+*/
 
 /*
 Object pools.
@@ -286,24 +272,64 @@ void shootBullet() {
 	}
 }
 
-Entity letter;
+Entity topS;
+Entity topP;
+Entity topA;
+Entity topC;
+Entity topE;
+
+Entity bottomI;
+Entity bottomN;
+Entity bottomV;
+Entity bottomA;
+Entity bottomD;
+Entity bottomE;
+Entity bottomR;
+Entity bottomS;
 
 void RenderMainMenu() {
-	letter.Draw(program);
+	modelMatrix.identity();
+	modelMatrix.Translate(-0.6f, 1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	topS.Draw(program);
+
+	modelMatrix.identity();
+	modelMatrix.Translate(-0.3f, 1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	topP.Draw(program);
+
+	modelMatrix.identity();
+	modelMatrix.Translate(0.0f, 1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	topA.Draw(program);
+
+	modelMatrix.identity();
+	modelMatrix.Translate(0.3f, 1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	topC.Draw(program);
+
+	modelMatrix.identity();
+	modelMatrix.Translate(0.6f, 1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	topE.Draw(program);
 
 	modelMatrix.identity();
 	modelMatrix.Translate(-0.3f, 0.0f, 0.0f);
-
 	program->setModelMatrix(modelMatrix);
-
 	DrawText(program, fontSheetTexture, "PLAY", 0.2f, 0.0001f);
 }
 
 Entity enemySprite;
 
 void RenderGameLevel() {
+	modelMatrix.identity();
+	modelMatrix.Translate(0.0f, -1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
 	player.Draw(program);
 
+	modelMatrix.identity();
+	modelMatrix.Translate(0.0f, 1.6f, 0.0f);
+	program->setModelMatrix(modelMatrix);
 	enemySprite.Draw(program);
 
 	for (int i = 0; i < entities.size(); i++) {
@@ -311,12 +337,24 @@ void RenderGameLevel() {
 	}
 }
 
-void UpdateGameLevel() {
+void UpdateGameLevel(float elapsed) {
+	/*
 	player.MoveInXDirection(3.0);
 	player.Update(elapsed);
 
 	for(int i = 0; i < MAX_BULLETS; i++) {
 		bullets[i].Update(elapsed);
+	}
+	*/
+	if (leftMovement) {
+		player.x -= player.velocity * elapsed;
+		player.left -= player.velocity * elapsed;
+		player.right -= player.velocity * elapsed;
+	}
+	if (rightMovement) {
+		player.x += player.velocity * elapsed;
+		player.left += player.velocity * elapsed;
+		player.right += player.velocity * elapsed;
 	}
 }
 
@@ -330,10 +368,10 @@ void Render() {
 		break;
 	}
 }
-void UpdateState() {
+void Update(float elapsed) {
 	switch(state) {
 		case STATE_GAME_LEVEL:
-			UpdateGameLevel();
+			UpdateGameLevel(elapsed);
 		break;
 	}
 }
@@ -356,7 +394,7 @@ int main(int argc, char *argv[])
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
 
 	fontSheetTexture = LoadTexture("pixel_font.png");
-	spriteSheetTexture = LoadTexture("sprites.png");
+	spriteSheetTexture = LoadTexture("sprite.png");
 
 	projectionMatrix.setOrthoProjection(-3.55, 3.55, -2.0f, 2.0f, -1.0f, 1.0f);
 
@@ -373,12 +411,17 @@ int main(int argc, char *argv[])
 	program->setProjectionMatrix(projectionMatrix);
 	program->setViewMatrix(viewMatrix);
 
-	//S
-	//letter.sprite = SheetSprite(spriteSheetTexture, 341.0f/512.0f, 0.0f/512.0f, 44.0f/512.0f, 93.0f/512.0f, 0.5);
+	topS.sprite = SheetSprite(spriteSheetTexture, 341.0f/512.0f, 0.0f/512.0f, 44.0f/512.0f, 93.0f/512.0f, 0.5);
+	topP.sprite = SheetSprite(spriteSheetTexture, 254.0f/512.0f, 150.0f/512.0f, 45.0f/512.0f, 93.0f/512.0f, 0.5);
+	topA.sprite = SheetSprite(spriteSheetTexture, 301.0f/512.0f, 100.0f/512.0f, 44.0f/512.0f, 98.0f/512.0f, 0.5);
+	topC.sprite = SheetSprite(spriteSheetTexture, 295.0f/512.0f, 0.0f/512.0f, 44.0f/512.0f, 98.0f/512.0f, 0.5);
+	topE.sprite = SheetSprite(spriteSheetTexture, 244.0f/512.0f, 50.0f/512.0f, 49.0f/512.0f, 98.0f/512.0f, 0.5);
+
+
 
 	player.sprite = SheetSprite(spriteSheetTexture, 0.0f/512.0f, 130.0f/512.0f, 104.0f/512.0f, 64.0f/512.0f, 0.5);
 
-	//enemySprite.sprite = SheetSprite(spriteSheetTexture, 0.0f/512.0f, 196.0f/512.0f, 96.0f/512.0f, 56.0f/512.0f, 0.5);
+	enemySprite.sprite = SheetSprite(spriteSheetTexture, 0.0f/512.0f, 196.0f/512.0f, 96.0f/512.0f, 56.0f/512.0f, 0.5);
 	entities.push_back(enemySprite);
 
 	//Bullet
@@ -422,13 +465,14 @@ int main(int argc, char *argv[])
 		//We will use this value to move everything in our game.
 
 		lastFrameTicks = ticks;
-
+		
 		//Clears the screen to the set clear color.
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		Render();
-
-		UpdateState();
+		if (start) {
+			Render();
+			Update(elapsed);
+		}
 
 		SDL_GL_SwapWindow(displayWindow);
 	}
