@@ -459,23 +459,23 @@ void RenderMainMenu() {
 	modelMatrix.Translate(-3.1f, -0.6f, 0.0f);
 	program->setModelMatrix(modelMatrix);
 	DrawText(program, fontSheet, "PRESS       TO MOVE UP", 0.2f, 0.0001f);
-	upAndDownKeys = Entity(-1.5f, -0.6f, 0.0, 0.0, keyboardSheet, 283.0f / 512.0f, 311.0f / 1024.0f, 60.0f / 512.0f, 68.0f / 1024.0f, 0.5f, 0.5f, -0.5f);
+	upAndDownKeys = Entity(-1.5f, -0.6f, 0.0, 0.0, keyboardSheet, 283.0f / 512.0f, 311.0f / 1024.0f, 60.0f / 512.0f, 68.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
 	upAndDownKeys.Draw(program);
 
 	modelMatrix.identity();
 	modelMatrix.Translate(-3.1f, -1.2f, 0.0f);
 	program->setModelMatrix(modelMatrix);
 	DrawText(program, fontSheet, "PRESS       TO MOVE LEFT OR RIGHT", 0.2f, 0.0001f);
-	leftKey = Entity(-1.9f, -1.2f, 0.0, 0.0, keyboardSheet, 191.0f / 512.0f, 980.0f / 1024.0f, 60.0f / 512.0f, 35.0f / 1024.0f, 0.5f, 0.5f, -0.5f);
+	leftKey = Entity(-1.9f, -1.2f, 0.0, 0.0, keyboardSheet, 191.0f / 512.0f, 980.0f / 1024.0f, 60.0f / 512.0f, 35.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
 	leftKey.Draw(program);
-	rightKey = Entity(-1.1f, -1.2f, 0.0, 0.0, keyboardSheet, 253.0f / 512.0f, 977.0f / 1024.0f, 60.0f / 512.0f, 35.0f / 1024.0f, 0.5f, 0.5f, -0.5f);
+	rightKey = Entity(-1.1f, -1.2f, 0.0, 0.0, keyboardSheet, 253.0f / 512.0f, 977.0f / 1024.0f, 60.0f / 512.0f, 35.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
 	rightKey.Draw(program);
 
 	modelMatrix.identity();
 	modelMatrix.Translate(-3.1f, -1.8f, 0.0f);
 	program->setModelMatrix(modelMatrix);
 	DrawText(program, fontSheet, "PRESS       TO EXIT", 0.2f, 0.0001f);
-	escapeKey = Entity(-1.5f, -1.8f, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, -0.5f);
+	escapeKey = Entity(-1.5f, -1.8f, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
 	escapeKey.Draw(program);
 }
 
@@ -495,28 +495,38 @@ void RenderGameOver() {
 
 	//Displays text
 
-	modelMatrix.identity();
-	modelMatrix.Translate(-1.8f + player.x, 1.0f + player.y, 0.0f);
-	program->setModelMatrix(modelMatrix);
 	if (playerWins == true) {
+		modelMatrix.identity();
+		modelMatrix.Translate(-1.2f + player.x, 1.0f + player.y, 0.0f);
+		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "VICTORY", 0.4f, 0.0001f);
 		modelMatrix.identity();
-		modelMatrix.Translate(-3.3f + player.x, .25f + player.y, 0.0f);
+		modelMatrix.Translate(-3.2f + player.x, 0.25f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "Doggo is at home!", 0.4f, 0.0001f);
+		modelMatrix.identity();
+		modelMatrix.Translate(-2.2f + player.x, -0.5f + player.y, 0.0f);
+		program->setModelMatrix(modelMatrix);
+		DrawText(program, fontSheet, "PRESS   TO EXIT", 0.3f, 0.0001f);
+		escapeKey = Entity(-0.4f + player.x, -0.5f + player.y, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
+		escapeKey.Draw(program);
 	}
 	else {
+		modelMatrix.identity();
+		modelMatrix.Translate(-1.5f + player.x, 1.0f + player.y, 0.0f);
+		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "GAME OVER", 0.4f, 0.0001f);
 		modelMatrix.identity();
-		modelMatrix.Translate(-3.4f + player.x, .25f + player.y, 0.0f);
+		modelMatrix.Translate(-3.1f + player.x, 0.25f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "Doggo is lost forever!", 0.3f, 0.0001f);
+		modelMatrix.identity();
+		modelMatrix.Translate(-2.0f + player.x, -0.5f + player.y, 0.0f);
+		program->setModelMatrix(modelMatrix);
+		DrawText(program, fontSheet, "PRESS   TO EXIT", 0.3f, 0.0001f);
+		escapeKey = Entity(-0.2f + player.x, -0.5f + player.y, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
+		escapeKey.Draw(program);
 	}
-
-	modelMatrix.identity();
-	modelMatrix.Translate(-1.70f + player.x, -1.0f + player.y, 0.0f);
-	program->setModelMatrix(modelMatrix);
-	DrawText(program, fontSheet, "PRESS ESC TO EXIT", 0.3f, 0.0001f);
 
 	gameRunning = false;
 }
@@ -559,7 +569,7 @@ void RenderGameLevel() {
 	}
 	if (gameLevel == 2) {
 		text1 = "LEVEL 2";
-		text2 = "Uh, oh! Wrong home! Watch out for the pits!";
+		text2 = "Uh, oh! Wrong home! Watch out for pits!";
 	}
 	if (gameLevel == 3) {
 		text1 = "LEVEL 3";
