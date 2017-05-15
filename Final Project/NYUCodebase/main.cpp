@@ -22,9 +22,9 @@ NOTES NOT MENTIONED DURING OUR PRESENTATION:
 
 - Background music is supposed to be played for the main menu, but unfortunately, it does not
 - Sounds are supposed to be played for both the player (when it gets hit by a fish bone, so it barks) and enemies (when they get hit by a bone, so they screech, but their screech can be very annoying after a while), but unfortunately they do not, because every time they are implemented, a random break occurs (similar to when we presented), and we are not too sure why after many failed attempts to implement them and we had to remove every instance of sound for the break to not occur anymore; for your convenience, the sound files are inside of the NYUCodebase folder
-- Player can attempt to dodge all of the enemies and their fish bones to reach to the goal and move on to the next level or even win as well
-- Artificial intelligence is present in level three, and it is not the best, because the enemies drop into pits if they are not killed yet
-- Other than these notes, we fulfilled all of the requirements to the bare minimum
+- Player can attempt to dodge all of the enemies and their fish bones to reach to the goal and move on to the next level and even win as well
+- Artificial intelligence is present in level three, and it is not the best, because the enemies drop into pits if they are not hit yet
+- Other than these notes, we believe we fulfilled all of the requirements to the bare minimum
 
 */
 
