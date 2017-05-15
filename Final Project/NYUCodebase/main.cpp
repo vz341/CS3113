@@ -500,10 +500,12 @@ void RenderGameOver() {
 		modelMatrix.Translate(-1.2f + player.x, 1.0f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "VICTORY", 0.4f, 0.0001f);
+
 		modelMatrix.identity();
 		modelMatrix.Translate(-3.2f + player.x, 0.25f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "Doggo is at home!", 0.4f, 0.0001f);
+
 		modelMatrix.identity();
 		modelMatrix.Translate(-2.2f + player.x, -0.5f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
@@ -516,10 +518,12 @@ void RenderGameOver() {
 		modelMatrix.Translate(-1.5f + player.x, 1.0f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "GAME OVER", 0.4f, 0.0001f);
+
 		modelMatrix.identity();
 		modelMatrix.Translate(-3.1f + player.x, 0.25f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "Doggo is lost forever!", 0.3f, 0.0001f);
+
 		modelMatrix.identity();
 		modelMatrix.Translate(-2.0f + player.x, -0.5f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
