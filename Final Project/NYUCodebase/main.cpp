@@ -497,20 +497,20 @@ void RenderGameOver() {
 
 	if (playerWins == true) {
 		modelMatrix.identity();
-		modelMatrix.Translate(-1.2f + player.x, 1.0f + player.y, 0.0f);
+		modelMatrix.Translate(-1.1f + player.x, 1.0f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
 		DrawText(program, fontSheet, "VICTORY", 0.4f, 0.0001f);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(-3.2f + player.x, 0.25f + player.y, 0.0f);
+		modelMatrix.Translate(-2.3f + player.x, 0.25f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
-		DrawText(program, fontSheet, "Doggo is at home!", 0.4f, 0.0001f);
+		DrawText(program, fontSheet, "Doggo is at home!", 0.3f, 0.0001f);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(-2.2f + player.x, -0.5f + player.y, 0.0f);
+		modelMatrix.Translate(-2.7f + player.x, -0.5f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
-		DrawText(program, fontSheet, "PRESS   TO EXIT", 0.3f, 0.0001f);
-		escapeKey = Entity(-0.4f + player.x, -0.5f + player.y, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
+		DrawText(program, fontSheet, "PRESS   TO EXIT", 0.4f, 0.0001f);
+		escapeKey = Entity(-0.3f + player.x, -0.5f + player.y, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
 		escapeKey.Draw(program);
 	}
 	else {
@@ -525,10 +525,10 @@ void RenderGameOver() {
 		DrawText(program, fontSheet, "Doggo is lost forever!", 0.3f, 0.0001f);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(-2.0f + player.x, -0.5f + player.y, 0.0f);
+		modelMatrix.Translate(-2.7f + player.x, -0.5f + player.y, 0.0f);
 		program->setModelMatrix(modelMatrix);
-		DrawText(program, fontSheet, "PRESS   TO EXIT", 0.3f, 0.0001f);
-		escapeKey = Entity(-0.2f + player.x, -0.5f + player.y, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
+		DrawText(program, fontSheet, "PRESS   TO EXIT", 0.4f, 0.0001f);
+		escapeKey = Entity(-0.3f + player.x, -0.5f + player.y, 0.0, 0.0, keyboardSheet, 0.0f / 512.0f, 936.0f / 1024.0f, 63.0f / 512.0f, 39.0f / 1024.0f, 0.5f, 0.5f, 0.0f);
 		escapeKey.Draw(program);
 	}
 
