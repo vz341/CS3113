@@ -1,0 +1,14 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_13.png" x="27" y="71" width="14" height="28"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_14.png" x="30" y="0" width="14" height="29"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_15.png" x="43" y="71" width="14" height="27"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_25.png" x="0" y="46" width="25" height="22"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_26.png" x="0" y="94" width="25" height="23"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_27.png" x="0" y="0" width="28" height="21"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_37.png" x="0" y="70" width="25" height="22"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_38.png" x="27" y="46" width="25" height="23"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_39.png" x="0" y="23" width="28" height="21"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_49.png" x="43" y="100" width="14" height="23"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_50.png" x="27" y="101" width="14" height="24"/>
+	<SubTexture name="7a45e5cea8e85fba634f7a1cbfe72f00_51.png" x="46" y="0" width="14" height="23"/>
+</TextureAtlas>

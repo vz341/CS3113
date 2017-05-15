@@ -1,0 +1,16 @@
+<TextureAtlas imagePath="sprites.png">
+	<SubTexture name="Bricks.png" x="440" y="387" width="32" height="32"/>
+	<SubTexture name="Buildings.png" x="1164" y="0" width="577" height="475"/>
+	<SubTexture name="Clouds.png" x="0" y="55" width="580" height="208"/>
+	<SubTexture name="Crate.png" x="440" y="455" width="32" height="32"/>
+	<SubTexture name="Fences.png" x="0" y="0" width="580" height="53"/>
+	<SubTexture name="Fire.png" x="474" y="375" width="20" height="40"/>
+	<SubTexture name="Ground.png" x="440" y="319" width="32" height="32"/>
+	<SubTexture name="Large Enemy.png" x="440" y="265" width="52" height="52"/>
+	<SubTexture name="Metal Beam.png" x="440" y="353" width="32" height="32"/>
+	<SubTexture name="Metal Scaffolding.png" x="440" y="421" width="32" height="32"/>
+	<SubTexture name="Player.png" x="474" y="319" width="30" height="22"/>
+	<SubTexture name="Sky.png" x="582" y="0" width="580" height="475"/>
+	<SubTexture name="Small Enemy.png" x="474" y="343" width="28" height="30"/>
+	<SubTexture name="Title.png" x="0" y="265" width="438" height="228"/>
+</TextureAtlas>

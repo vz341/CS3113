@@ -22,7 +22,6 @@ vz341
 #include <SDL_image.h>
 
 #include <vector>
-#include <algorithm>
 
 //Include stb_image header.
 //NOTE: You must define STB_IMAGE_IMPLEMENTATION in one of the files you are including it from!
@@ -32,8 +31,6 @@ vz341
 
 #include "ShaderProgram.h"
 #include "Matrix.h"
-
-#define MAX_BULLETS 30
 
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
@@ -49,6 +46,7 @@ Matrix projectionMatrix;
 Matrix modelMatrix;
 Matrix viewMatrix;
 
+//Generates a new OpenGL texture ID.
 GLuint spriteSheetTexture;
 GLuint fontSheetTexture;
 
@@ -56,7 +54,7 @@ enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER};
 
 int state;
 
-bool start = false;
+bool start = true;
 
 //Keeping time.
 
@@ -64,6 +62,8 @@ bool start = false;
 
 float lastFrameTicks = 0.0f;
 float elapsed;
+float lastLaser;
+float lastShot;
 
 bool leftMovement = false;
 bool rightMovement = false;
@@ -101,12 +101,12 @@ GLuint LoadTexture(const char *filePath) {
 
 void DrawText(ShaderProgram *program, int fontTexture, std::string text, float size, float spacing) {
 
-	float texture_size = 1.0/16.0f;
+	float texture_size = 1.0 / 16.0f;
 
 	std::vector<float> vertexData;
 	std::vector<float> texCoordData;
 
-	for(int i=0; i < text.size(); i++) {
+	for (int i = 0; i < text.size(); i++) {
 
 		int spriteIndex = (int)text[i];
 
@@ -114,12 +114,12 @@ void DrawText(ShaderProgram *program, int fontTexture, std::string text, float s
 		float texture_y = (float)(spriteIndex / 16) / 16.0f;
 
 		vertexData.insert(vertexData.end(), {
-			((size+spacing) * i) + (-0.5f * size), 0.5f * size,
-			((size+spacing) * i) + (-0.5f * size), -0.5f * size,
-			((size+spacing) * i) + (0.5f * size), 0.5f * size,
-			((size+spacing) * i) + (0.5f * size), -0.5f * size,
-			((size+spacing) * i) + (0.5f * size), 0.5f * size,
-			((size+spacing) * i) + (-0.5f * size), -0.5f * size,
+			((size + spacing) * i) + (-0.5f * size), 0.5f * size,
+			((size + spacing) * i) + (-0.5f * size), -0.5f * size,
+			((size + spacing) * i) + (0.5f * size), 0.5f * size,
+			((size + spacing) * i) + (0.5f * size), -0.5f * size,
+			((size + spacing) * i) + (0.5f * size), 0.5f * size,
+			((size + spacing) * i) + (-0.5f * size), -0.5f * size,
 		});
 		texCoordData.insert(texCoordData.end(), {
 			texture_x, texture_y,
@@ -148,38 +148,38 @@ void DrawText(ShaderProgram *program, int fontTexture, std::string text, float s
 }
 
 class SheetSprite {
-	public:
-		SheetSprite() {}
+public:
+	SheetSprite() {}
 
-		SheetSprite(unsigned int textureID, float u, float v, float width, float height, float size) {
-			this->textureID = textureID;
-			this->u = u;
-			this->v = v;
-			this->width = width;
-			this->height = height;
-			this->size = size;
-		}
+	SheetSprite(unsigned int textureID, float u, float v, float width, float height, float size) {
+		this->textureID = textureID;
+		this->u = u;
+		this->v = v;
+		this->width = width;
+		this->height = height;
+		this->size = size;
+	}
 
-		void Draw(ShaderProgram *program);
+	void Draw(ShaderProgram *program, Matrix modelMatrix, float x, float y);
 
-		float size;
-		unsigned int textureID;
-		float u;
-		float v;
-		float width;
-		float height;
+	float size;
+	unsigned int textureID;
+	float u;
+	float v;
+	float width;
+	float height;
 };
 
-void SheetSprite::Draw(ShaderProgram *program) {
+void SheetSprite::Draw(ShaderProgram *program, Matrix modelMatrix, float x, float y) {
 	glBindTexture(GL_TEXTURE_2D, textureID);
 
 	GLfloat texCoords[] = {
-		u, v+height,
-		u+width, v,
+		u, v + height,
+		u + width, v,
 		u, v,
-		u+width, v,
-		u, v+height,
-		u+width, v+height
+		u + width, v,
+		u, v + height,
+		u + width, v + height
 	};
 
 	float aspect = width / height;
@@ -189,9 +189,13 @@ void SheetSprite::Draw(ShaderProgram *program) {
 		-0.5f * size * aspect, 0.5f * size,
 		0.5f * size * aspect, 0.5f * size,
 		-0.5f * size * aspect, -0.5f * size,
-		0.5f * size * aspect, -0.5f * size};
+		0.5f * size * aspect, -0.5f * size };
 
 	// draw our arrays
+
+	modelMatrix.identity();
+	modelMatrix.Translate(x, y, 0.0f);
+	program->setModelMatrix(modelMatrix);
 
 	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, verticies);
 	glEnableVertexAttribArray(program->positionAttribute);
@@ -206,70 +210,110 @@ void SheetSprite::Draw(ShaderProgram *program) {
 }
 
 class Entity {
-	public:
+public:
 
-		Entity() {}
+	Entity() {}
 
-		Entity(float x, float y) {
-			this->x = x;
-			this->y = y;
-		}
+	Entity(float x, float y, float velocity_x, float velocity_y) {
+		this->x = x;
+		this->y = y;
 
-		void Draw(ShaderProgram *program) {
-			sprite.Draw(program);
-		}
+		//Although the player moves in the x direction,
+		this->velocity_x = velocity_x;
+		//Enemies will move in both the x and y directions
+		this->velocity_y = velocity_y;
 
-		float x = 0.0f;
-		float y = 0.0f;
+		//Contact flags that will detect collision between different entities
+		left = x - 0.05f;
+		right = x + 0.05f;
+		top = y + 0.05f;
+		bottom = y - 0.05f;
 
-		float left = x - 0.05f;
-		float right = x + 0.05f;
+		timeAlive = 0.0f;
+	}
 
-		float velocity;
+	float x;
+	float y;
 
-		//float rotation;
+	float left;
+	float right;
+	float top;
+	float bottom;
 
-		float timeAlive = 0.0f;
+	float velocity_x;
+	float velocity_y;
 
-		SheetSprite sprite;
+	//Time bullets and lasers are alive so that they can be removed
+	float timeAlive;
 
-		//void Update(float elapsed);
+	Matrix entityMatrix;
+
+	void Draw(ShaderProgram *program) {
+		sprite.Draw(program, entityMatrix, x, y);
+	}
+
+	SheetSprite sprite;
+
+	void Update(float elapsed) {
+		//Distance = Speed x Time
+
+		//elapsed controls time
+
+		//x and y values are based on the center
+
+		x += velocity_x * elapsed;
+		left += velocity_x * elapsed;
+		right += velocity_x * elapsed;
+
+		y += velocity_y * elapsed;
+		top += velocity_y * elapsed;
+		bottom += velocity_y * elapsed;
+
+		timeAlive += elapsed;
+	}
 };
 
 Entity player;
 
-//Entities are a useful way for us to think about objects in the game.
+Entity enemyOne;
+Entity enemyTwo;
+Entity enemyThree;
+Entity enemyFour;
+Entity enemyFive;
+Entity enemySix;
 
-std::vector<Entity> entities;
+std::vector<Entity> enemies;
 
+std::vector<Entity> bullets;
 
-/*
-void Update(float elapsed) {
-	for (int i = 0; i < entities.size(); i++) {
-		entities[i].Update(elapsed);
+//Player shoots bullets
+void shootBullet() {
+	//Initializes or spawns at the player's coordinates
+	Entity newBullet(player.x, player.y, 0.0f, 3.0f);
+	newBullet.sprite = SheetSprite(spriteSheetTexture, 268.0f / 512.0f, 0.0f / 512.0f, 24.0f / 512.0f, 48.0f / 512.0f, 0.2);
+	bullets.push_back(newBullet);
+}
+
+//Removes bullet
+bool shouldRemoveBullet(Entity bullet) {
+	//If the bullet is alive longer than 3.0f
+	if (bullet.timeAlive > 3.0f) {
+		//Return true to remove
+		return true;
+	} else {
+		//Otherwise, return false to not remove
+		return false;
 	}
 }
-*/
 
-/*
-Object pools.
+std::vector<Entity> lasers;
 
-- Less prone to memory leaks.
-- Have a maximum number of objects.
-- Allocated all at once.
-- Know how fast things will run with maximum objects.
-*/
-
-int bulletIndex = 0;
-Entity bullets[MAX_BULLETS];
-
-void shootBullet() {
-	bullets[bulletIndex].x = -1.2;
-	bullets[bulletIndex].y = 0.0;
-	bulletIndex++;
-	if(bulletIndex > MAX_BULLETS-1) {
-		bulletIndex = 0;
-	}
+//Enemies shoot lasers
+void shootLaser(int shoot) {
+	//Initializes or spawns at the enemies' coordinates
+	Entity newlaser(enemies[shoot].x, enemies[shoot].y, 0.0f, -3.0f);
+	newlaser.sprite = SheetSprite(spriteSheetTexture, 268.0f / 512.0f, 0.0f / 512.0f, 24.0f / 512.0f, 48.0f / 512.0f, 0.2);
+	lasers.push_back(newlaser);
 }
 
 Entity topS;
@@ -287,91 +331,223 @@ Entity bottomE;
 Entity bottomR;
 Entity bottomS;
 
+//Renders main menu
 void RenderMainMenu() {
 	modelMatrix.identity();
-	modelMatrix.Translate(-0.6f, 1.6f, 0.0f);
+	modelMatrix.Translate(-2.7f, 2.2f, 0.0f);
 	program->setModelMatrix(modelMatrix);
+	DrawText(program, fontSheetTexture, "SCORE<1>  HI-SCORE  SCORE<2>", 0.2f, 0.0001f);
+
 	topS.Draw(program);
-
-	modelMatrix.identity();
-	modelMatrix.Translate(-0.3f, 1.6f, 0.0f);
-	program->setModelMatrix(modelMatrix);
 	topP.Draw(program);
-
-	modelMatrix.identity();
-	modelMatrix.Translate(0.0f, 1.6f, 0.0f);
-	program->setModelMatrix(modelMatrix);
 	topA.Draw(program);
-
-	modelMatrix.identity();
-	modelMatrix.Translate(0.3f, 1.6f, 0.0f);
-	program->setModelMatrix(modelMatrix);
 	topC.Draw(program);
-
-	modelMatrix.identity();
-	modelMatrix.Translate(0.6f, 1.6f, 0.0f);
-	program->setModelMatrix(modelMatrix);
 	topE.Draw(program);
 
+	enemyOne.Draw(program);
+	enemyTwo.Draw(program);
+	enemyThree.Draw(program);
+	enemyFour.Draw(program);
+	enemyFive.Draw(program);
+	enemySix.Draw(program);
+
+	bottomI.Draw(program);
+	bottomN.Draw(program);
+	bottomV.Draw(program);
+	bottomA.Draw(program);
+	bottomD.Draw(program);
+	bottomE.Draw(program);
+	bottomR.Draw(program);
+	bottomS.Draw(program);
+
 	modelMatrix.identity();
-	modelMatrix.Translate(-0.3f, 0.0f, 0.0f);
+	modelMatrix.Translate(-0.3f, -0.3f, 0.0f);
 	program->setModelMatrix(modelMatrix);
 	DrawText(program, fontSheetTexture, "PLAY", 0.2f, 0.0001f);
+
+	modelMatrix.identity();
+	modelMatrix.Translate(0.9f, -2.2f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	DrawText(program, fontSheetTexture, "CREDIT  00", 0.2f, 0.0001f);
 }
 
-Entity enemySprite;
-
+//Renders game level
 void RenderGameLevel() {
 	modelMatrix.identity();
-	modelMatrix.Translate(0.0f, -1.6f, 0.0f);
+	modelMatrix.Translate(-2.7f, 2.2f, 0.0f);
 	program->setModelMatrix(modelMatrix);
+	DrawText(program, fontSheetTexture, "SCORE<1>  HI-SCORE  SCORE<2>", 0.2f, 0.0001f);
+
+	for (size_t i = 0; i < enemies.size(); i++) {
+		enemies[i].Draw(program);
+	}
+	for (size_t i = 0; i < bullets.size(); i++) {
+		bullets[i].Draw(program);
+	}
+	for (size_t i = 0; i < lasers.size(); i++) {
+		lasers[i].Draw(program);
+	}
+
 	player.Draw(program);
 
 	modelMatrix.identity();
-	modelMatrix.Translate(0.0f, 1.6f, 0.0f);
+	modelMatrix.Translate(0.9f, -2.2f, 0.0f);
 	program->setModelMatrix(modelMatrix);
-	enemySprite.Draw(program);
+	DrawText(program, fontSheetTexture, "CREDIT  00", 0.2f, 0.0001f);
+}
 
-	for (int i = 0; i < entities.size(); i++) {
-		entities[i].sprite.Draw(program);
+//Entities are a useful way for us to think about objects in the game.
+
+//Initializes many different types of entities
+void initializeEntities() {
+	//Initializes the word, "SPACE" during the main menu
+	topS = Entity(-0.6, 1.2, 0.0, 0.0);
+	topS.sprite = SheetSprite(spriteSheetTexture, 341.0f / 512.0f, 0.0f / 512.0f, 44.0f / 512.0f, 93.0f / 512.0f, 0.5);
+	topP = Entity(-0.3, 1.2, 0.0, 0.0);
+	topP.sprite = SheetSprite(spriteSheetTexture, 254.0f / 512.0f, 150.0f / 512.0f, 45.0f / 512.0f, 93.0f / 512.0f, 0.5);
+	topA = Entity(0.0, 1.2, 0.0, 0.0);
+	topA.sprite = SheetSprite(spriteSheetTexture, 301.0f / 512.0f, 100.0f / 512.0f, 44.0f / 512.0f, 98.0f / 512.0f, 0.5);
+	topC = Entity(0.3, 1.2, 0.0, 0.0);
+	topC.sprite = SheetSprite(spriteSheetTexture, 295.0f / 512.0f, 0.0f / 512.0f, 44.0f / 512.0f, 98.0f / 512.0f, 0.5);
+	topE = Entity(0.6, 1.2, 0.0, 0.0);
+	topE.sprite = SheetSprite(spriteSheetTexture, 244.0f / 512.0f, 50.0f / 512.0f, 49.0f / 512.0f, 98.0f / 512.0f, 0.5);
+
+	//Initializes the different types of enemies during the main menu
+	enemyOne = Entity(-1.5, -1.2, 0.0, 0.0);
+	enemyOne.sprite = SheetSprite(spriteSheetTexture, 188.0f / 512.0f, 196.0f / 512.0f, 64.0f / 512.0f, 48.0f / 512.0f, 0.2);
+	enemyTwo = Entity(-0.9, -1.2, 0.0, 0.0);
+	enemyTwo.sprite = SheetSprite(spriteSheetTexture, 178.0f / 512.0f, 50.0f / 512.0f, 64.0f / 512.0f, 48.0f / 512.0f, 0.2);
+	enemyThree = Entity(-0.3, -1.2, 0.0, 0.0);
+	enemyThree.sprite = SheetSprite(spriteSheetTexture, 178.0f / 512.0f, 0.0f / 512.0f, 88.0f / 512.0f, 48.0f / 512.0f, 0.2);
+	enemyFour = Entity(0.3, -1.2, 0.0, 0.0);
+	enemyFour.sprite = SheetSprite(spriteSheetTexture, 98.0f / 512.0f, 196.0f / 512.0f, 88.0f / 512.0f, 48.0f / 512.0f, 0.2);
+	enemyFive = Entity(0.9, -1.2, 0.0, 0.0);
+	enemyFive.sprite = SheetSprite(spriteSheetTexture, 106.0f / 512.0f, 130.0f / 512.0f, 96.0f / 512.0f, 64.0f / 512.0f, 0.2);
+	enemySix = Entity(1.5, -1.2, 0.0, 0.0);
+	enemySix.sprite = SheetSprite(spriteSheetTexture, 0.0f / 512.0f, 196.0f / 512.0f, 96.0f / 512.0f, 56.0f / 512.0f, 0.2);
+
+	//Initializes the word, "INVADERS" during the main menu
+	bottomI = Entity(-1.1, 0.6, 0.0, 0.0);
+	bottomI.sprite = SheetSprite(spriteSheetTexture, 374.0f / 512.0f, 146.0f / 512.0f, 10.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomN = Entity(-0.8, 0.6, 0.0, 0.0);
+	bottomN.sprite = SheetSprite(spriteSheetTexture, 204.0f / 512.0f, 100.0f / 512.0f, 30.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomV = Entity(-0.5, 0.6, 0.0, 0.0);
+	bottomV.sprite = SheetSprite(spriteSheetTexture, 301.0f / 512.0f, 200.0f / 512.0f, 30.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomA = Entity(-0.2, 0.6, 0.0, 0.0);
+	bottomA.sprite = SheetSprite(spriteSheetTexture, 347.0f / 512.0f, 95.0f / 512.0f, 25.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomD = Entity(0.1, 0.6, 0.0, 0.0);
+	bottomD.sprite = SheetSprite(spriteSheetTexture, 374.0f / 512.0f, 95.0f / 512.0f, 24.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomE = Entity(0.4, 0.6, 0.0, 0.0);
+	bottomE.sprite = SheetSprite(spriteSheetTexture, 333.0f / 512.0f, 200.0f / 512.0f, 25.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomR = Entity(0.7, 0.6, 0.0, 0.0);
+	bottomR.sprite = SheetSprite(spriteSheetTexture, 347.0f / 512.0f, 146.0f / 512.0f, 25.0f / 512.0f, 49.0f / 512.0f, 0.5);
+	bottomS = Entity(1.0, 0.6, 0.0, 0.0);
+	bottomS.sprite = SheetSprite(spriteSheetTexture, 360.0f / 512.0f, 197.0f / 512.0f, 24.0f / 512.0f, 49.0f / 512.0f, 0.5);
+
+	//Initializes the player during the game level
+	player = Entity(0.0, -1.85, 0.0, 0.0);
+	player.sprite = SheetSprite(spriteSheetTexture, 0.0f / 512.0f, 130.0f / 512.0f, 104.0f / 512.0f, 64.0f / 512.0f, 0.2);
+
+	//Initializes the aliens during the game level
+	for (int i = 0; i < 50; i++) {
+		//(i % 10) is used to initialize 10 enemies per row
+		//(i / 10) is used for the spacing of each enemy
+		Entity enemy(-3.0f + (i % 10) * 0.5, 1.9 - (i / 10 * 0.4), 1.0f, -0.03f);
+		enemy.sprite = SheetSprite(spriteSheetTexture, 0.0f / 512.0f, 196.0f / 512.0f, 96.0f / 512.0f, 56.0f / 512.0f, 0.2);
+		enemies.push_back(enemy);
 	}
 }
 
 void UpdateGameLevel(float elapsed) {
-	/*
-	player.MoveInXDirection(3.0);
 	player.Update(elapsed);
 
-	for(int i = 0; i < MAX_BULLETS; i++) {
-		bullets[i].Update(elapsed);
-	}
-	*/
 	if (leftMovement) {
-		player.x -= player.velocity * elapsed;
-		player.left -= player.velocity * elapsed;
-		player.right -= player.velocity * elapsed;
+		player.velocity_x = -3.0;
 	}
 	if (rightMovement) {
-		player.x += player.velocity * elapsed;
-		player.left += player.velocity * elapsed;
-		player.right += player.velocity * elapsed;
+		player.velocity_x = 3.0;
+	}
+	if (projectileMovement) {
+		//Shoots every 0.4f or waits until 0.4f to shoot again
+		//lastShot is always increasing
+		if (lastShot > 0.4f) {
+			//lastShot needs to be reset to shoot
+			lastShot = 0.0f;
+			shootBullet();
+		}
+	}
+
+	//Enemies movement
+	for (size_t i = 0; i < enemies.size(); i++) {
+		enemies[i].Update(elapsed);
+		//Enemies move left and move right
+		if ((enemies[i].left < -4.0f && enemies[i].velocity_x < 0) || (enemies[i].right > 4.0f && enemies[i].velocity_x > 0)) {
+			//Reverses direction
+			for (size_t i = 0; i < enemies.size(); i++) {
+				enemies[i].velocity_x = -enemies[i].velocity_x;
+			}
+		}
+		//Invades by going down and past the player
+		if (enemies[i].y < player.y) {
+			//Game is over
+			start = false;
+		}
+	}
+
+	if (lastLaser > 0.5f) {
+		lastLaser = 0;
+		//Randomly picks an enemy to shoot from
+		int enemyToShoot = rand() % enemies.size();
+		shootLaser(enemyToShoot);
+	}
+
+	for (size_t i = 0; i < lasers.size(); i++) {
+		lasers[i].Update(elapsed);
+		//If the lasers' timeAlive is above 3.0f, remove them
+		if (shouldRemoveBullet(lasers[i])) {
+			lasers.erase(lasers.begin() + i);
+		}
+		//If lasers touch the player
+		if (lasers[i].bottom < player.top && lasers[i].top > player.bottom && lasers[i].left < player.right && lasers[i].right > player.left) {
+			//The game is over
+			start = false;
+		}
+	}
+
+	//Updates bullet and hits enemy
+	for (size_t i = 0; i < bullets.size(); i++) {
+		bullets[i].Update(elapsed);
+		for (size_t j = 0; j < enemies.size(); j++) {
+			if (enemies[j].bottom < bullets[i].top && enemies[j].top > bullets[i].bottom && enemies[j].left < bullets[i].right && enemies[j].right > bullets[i].left) {
+				enemies.erase(enemies.begin() + j);
+				//timeAlive for bullets = 4.0 so that shouldRemoveBullet can be true
+				bullets[i].timeAlive = 4.0;
+			}
+		}
+		if (shouldRemoveBullet(bullets[i])) {
+			bullets.erase(bullets.begin() + i);
+		}
+	}
+
+	if (enemies.size() == 0) {
+		start = false;
 	}
 }
 
 void Render() {
-	switch(state) {
-		case STATE_MAIN_MENU:
-			RenderMainMenu();
+	switch (state) {
+	case STATE_MAIN_MENU:
+		RenderMainMenu();
 		break;
-		case STATE_GAME_LEVEL:
-			RenderGameLevel();
+	case STATE_GAME_LEVEL:
+		RenderGameLevel();
 		break;
 	}
 }
 void Update(float elapsed) {
-	switch(state) {
-		case STATE_GAME_LEVEL:
-			UpdateGameLevel(elapsed);
+	switch (state) {
+	case STATE_GAME_LEVEL:
+		UpdateGameLevel(elapsed);
 		break;
 	}
 }
@@ -394,9 +570,9 @@ int main(int argc, char *argv[])
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
 
 	fontSheetTexture = LoadTexture("pixel_font.png");
-	spriteSheetTexture = LoadTexture("sprite.png");
+	spriteSheetTexture = LoadTexture("sprites.png");
 
-	projectionMatrix.setOrthoProjection(-3.55, 3.55, -2.0f, 2.0f, -1.0f, 1.0f);
+	projectionMatrix.setOrthoProjection(-4.00, 4.00, -2.5f, 2.5f, -1.0f, 1.0f);
 
 	glUseProgram(program->programID);
 
@@ -410,50 +586,46 @@ int main(int argc, char *argv[])
 	program->setModelMatrix(modelMatrix);
 	program->setProjectionMatrix(projectionMatrix);
 	program->setViewMatrix(viewMatrix);
-
-	topS.sprite = SheetSprite(spriteSheetTexture, 341.0f/512.0f, 0.0f/512.0f, 44.0f/512.0f, 93.0f/512.0f, 0.5);
-	topP.sprite = SheetSprite(spriteSheetTexture, 254.0f/512.0f, 150.0f/512.0f, 45.0f/512.0f, 93.0f/512.0f, 0.5);
-	topA.sprite = SheetSprite(spriteSheetTexture, 301.0f/512.0f, 100.0f/512.0f, 44.0f/512.0f, 98.0f/512.0f, 0.5);
-	topC.sprite = SheetSprite(spriteSheetTexture, 295.0f/512.0f, 0.0f/512.0f, 44.0f/512.0f, 98.0f/512.0f, 0.5);
-	topE.sprite = SheetSprite(spriteSheetTexture, 244.0f/512.0f, 50.0f/512.0f, 49.0f/512.0f, 98.0f/512.0f, 0.5);
-
-
-
-	player.sprite = SheetSprite(spriteSheetTexture, 0.0f/512.0f, 130.0f/512.0f, 104.0f/512.0f, 64.0f/512.0f, 0.5);
-
-	enemySprite.sprite = SheetSprite(spriteSheetTexture, 0.0f/512.0f, 196.0f/512.0f, 96.0f/512.0f, 56.0f/512.0f, 0.5);
-	entities.push_back(enemySprite);
-
-	//Bullet
-	//bullets.sprite = SheetSprite(spriteSheetTexture, 268.0f/512.0f, 0.0f/512.0f, 24.0f/512.0f, 48.0f/512.0f, 0.5);
+	
+	initializeEntities();
 
 	SDL_Event event;
 	bool done = false;
 	while (!done) {
 		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT_CLOSE) {
+			if (event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT_CLOSE || event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
 				done = true;
 			}
-			else if (event.type == SDL_KEYDOWN) {
-				switch (state) {
-				case STATE_MAIN_MENU:
-					if (event.key.keysym.scancode == SDL_SCANCODE_SPACE && !start) {
+			switch (event.type) {
+			case SDL_KEYDOWN:
+				if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+					if (state == STATE_MAIN_MENU) {
 						state = STATE_GAME_LEVEL;
-						start = true;
 					}
-				break;
-				case STATE_GAME_LEVEL:
-					if (event.key.keysym.scancode == SDL_SCANCODE_LEFT) {
-						leftMovement = true;
-					}
-					else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
-						rightMovement = true;
-					}
-					else if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+					else {
 						projectileMovement = true;
 					}
-				break;
 				}
+				if (event.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+					leftMovement = true;
+				}
+				else if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+					rightMovement = true;
+				}
+				break;
+			case SDL_KEYUP:
+				if (event.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+					leftMovement = false;
+					player.velocity_x = 0;
+				}
+				if (event.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+					rightMovement = false;
+					player.velocity_x = 0;
+				}
+				if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+					projectileMovement = false;
+				}
+				break;
 			}
 		}
 		//In game loop
@@ -465,13 +637,15 @@ int main(int argc, char *argv[])
 		//We will use this value to move everything in our game.
 
 		lastFrameTicks = ticks;
-		
+		lastLaser += elapsed;
+		lastShot += elapsed;
+
 		//Clears the screen to the set clear color.
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		if (start) {
-			Render();
 			Update(elapsed);
+			Render();
 		}
 
 		SDL_GL_SwapWindow(displayWindow);

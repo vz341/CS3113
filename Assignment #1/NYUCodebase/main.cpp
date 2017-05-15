@@ -166,11 +166,11 @@ int main(int argc, char *argv[])
 		glBindTexture(GL_TEXTURE_2D, cheeseburgerTexture);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(cheeseburgerPosition, 0.0f, 0.0f);
+		modelMatrix.Translate(cheeseburgerPosition, 1.0f, 1.0f);
 
 		program.setModelMatrix(modelMatrix);
 
-		float cheeseburgerVertices[] = { -1.00, 0.5, -1.50, 0.5, -1.50, 0.0, -1.50, 0.0, -1.00, 0.0, -1.00, 0.5 };
+		float cheeseburgerVertices[] = { -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5 };
 
 		glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, cheeseburgerVertices);
 		glEnableVertexAttribArray(program.positionAttribute);
@@ -188,11 +188,11 @@ int main(int argc, char *argv[])
 		glBindTexture(GL_TEXTURE_2D, hotdogTexture);
 
 		modelMatrix.identity();
-		modelMatrix.Translate(hotdogPosition, 0.0f, 0.0f);
+		modelMatrix.Translate(hotdogPosition, -1.0f, -1.0f);
 
 		program.setModelMatrix(modelMatrix);
 
-		float hotdogVertices[] = { -2.00, 0.5, -2.50, 0.5, -2.50, 0.0, -2.50, 0.0, -2.00, 0.0, -2.00, 0.5 };
+		float hotdogVertices[] = { -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5 };
 
 		glVertexAttribPointer(program.positionAttribute, 2, GL_FLOAT, false, 0, hotdogVertices);
 		glEnableVertexAttribArray(program.positionAttribute);
