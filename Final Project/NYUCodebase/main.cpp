@@ -38,11 +38,11 @@ NOTES NOT MENTIONED DURING OUR PRESENTATION:
 #include <SDL_opengl.h>
 #include <SDL_image.h>
 
-#include <ctime>
-#include <vector>
-
 #include <iostream>
 #include <sstream>
+
+#include <ctime>
+#include <vector>
 
 //Playing audio with SDL2
 //SDL_mixer (the easy way).
@@ -83,34 +83,37 @@ GLuint groundSheet;
 GLuint buildingSheet;
 
 Matrix projectionMatrix;
-Matrix viewMatrix;
 Matrix modelMatrix;
+Matrix viewMatrix;
 
 float globalTexCoords[] = { 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f };
 
 enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER };
+
 bool gameRunning = true;
 bool playerWins = false;
 
-int gameState;
+int gameState = 0;
 int gameLevel = 1;
+
+bool nextLevel = false;
 
 int lives = 10;
 int alive = 0;
 
-bool nextLevel = false;
-
-int deathRange;
+int deathRange = 0;
 
 //Time values
 float lastFrameTicks = 0.0f;
-float elapsed;
-float animationTime;
-float timer;
-float runAnimationTimer;
-float newTimer;
-float playerLastShot = 0.0f;
+float elapsed = 0.0f;
+
+float animationTime = 0.0f;
+float timer = 0.0f;
+float runAnimationTimer = 0.0f;
+float newTimer = 0.0f;
+
 float playerLastJump = 0.0f;
+float playerLastShot = 0.0f;
 float enemyLastShot = 0.0f;
 
 //Control booleans
@@ -306,10 +309,6 @@ public:
 
 	Entity() {}
 
-	void Draw(ShaderProgram *program) {
-		sprite.Draw(program, entityMatrix, x, y);
-	}
-
 	Entity(float x, float y, float velocityX, float velocityY, unsigned int textureID, float u, float v, float width, float height, float szX, float szY, float gravity) {
 		this->x = x;
 		this->y = y;
@@ -328,31 +327,39 @@ public:
 		acceleratonX = 0;
 		acceleratonY = gravity;
 
-		entityMatrix.identity();
-		entityMatrix.Translate(x, y, 0);
-
 		timeAlive = 0.0f;
 
 		sprite = SheetSprite(textureID, u, v, width, height, szX, szY);
 	}
 
-	SheetSprite sprite;
-
 	float x;
 	float y;
+
 	float left;
 	float right;
 	float top;
 	float bottom;
-	float velocityX;
-	float velocityY;
-	float acceleratonX;
-	float acceleratonY;
+
 	bool collisionX;
 	bool collisionY;
-	float timeAlive;
+
+	float velocityX;
+	float velocityY;
+
+	float acceleratonX;
+	float acceleratonY;
+
 	float gravity = 0.0f;
+
+	float timeAlive;
+
 	Matrix entityMatrix;
+
+	void Draw(ShaderProgram *program) {
+		sprite.Draw(program, entityMatrix, x, y);
+	}
+
+	SheetSprite sprite;
 
 	void Update(float elapsed) {
 		velocityX += acceleratonX * elapsed;
@@ -519,7 +526,7 @@ void RenderGameLevel() {
 	modelMatrix.identity();
 	modelMatrix.Translate(player.x - 4.0f, player.y + 3.0f , 0.0);
 	program->setModelMatrix(modelMatrix);
-	std::string text = "LIVES X ";
+	std::string text = "LIVE(S) X ";
 	std::ostringstream oss;
 	oss << lives;
 	text += oss.str();
@@ -730,12 +737,12 @@ void UpdateGameLevel(float elapsed) {
 	if (gameLevel >= 3) {
 		for (size_t i = 0; i < enemies.size(); i++) {
 			enemies[i].Update(elapsed);
+			int charge = rand() % 2;
+			if (fabs(player.x - enemies[i].x) < 4.0f) {
 				int charge = rand() % 2;
-				if (fabs(player.x - enemies[i].x) < 4.0f) {
-					int charge = rand() % 2;
-					enemies[i].velocityX = -.5;
-				}
+				enemies[i].velocityX = -.5;
 			}
+		}
 	}
 
 	//Sets values and makes bones

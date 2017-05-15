@@ -361,19 +361,19 @@ void RenderGameLevel() {
 
 	player.Draw(program);
 
-	for (size_t i = 0; i < bullets.size(); i++) {
+	for (int i = 0; i < bullets.size(); i++) {
 		bullets[i].Draw(program);
 	}
 
-	for (size_t i = 0; i < enemies.size(); i++) {
+	for (int i = 0; i < enemies.size(); i++) {
 		enemies[i].Draw(program);
 	}
 
-	for (size_t i = 0; i < bricks.size(); i++) {
+	for (int i = 0; i < bricks.size(); i++) {
 		bricks[i].Draw(program);
 	}
 
-	for (size_t i = 0; i < grounds.size(); i++) {
+	for (int i = 0; i < grounds.size(); i++) {
 		grounds[i].Draw(program);
 	}
 }
@@ -389,7 +389,7 @@ void initializeEntities() {
 	smallEnemy.sprite = SheetSprite(spriteSheetTexture, 474.0f / 2048.0f, 343.0f / 512.0f, 28.0f / 2048.0f, 30.0f / 512.0f, 0.5, 0.5);
 	enemies.push_back(smallEnemy);
 
-	Entity largeEnemy(1.5f, 1.0f, 0.0, 0.0, true);
+	Entity largeEnemy(2.5f, 1.0f, 0.0, 0.0, true);
 	largeEnemy.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 265.0f / 512.0f, 52.0f / 2048.0f, 52.0f / 512.0f, 0.5, 0.5);
 	enemies.push_back(largeEnemy);
 
@@ -486,10 +486,20 @@ void UpdateGameLevel(float elapsed) {
 		}
 	}
 
+	//Enemies movement
+	for (int i = 0; i < enemies.size(); i++) {
+		enemies[i].Update(elapsed);
+		int charge = rand() % 2;
+		if (fabs(player.x - enemies[i].x) < 4.0f) {
+			int charge = rand() % 2;
+			enemies[i].velocity_x = 0.5;
+		}
+	}
+
 	//Updates bullet and hits enemy
-	for (size_t i = 0; i < bullets.size(); i++) {
+	for (int i = 0; i < bullets.size(); i++) {
 		bullets[i].Update(elapsed);
-		for (size_t j = 0; j < enemies.size(); j++) {
+		for (int j = 0; j < enemies.size(); j++) {
 			if (enemies[j].bottom < bullets[i].top && enemies[j].top > bullets[i].bottom && enemies[j].left < bullets[i].right && enemies[j].right > bullets[i].left) {
 				enemies.erase(enemies.begin() + j);
 				//timeAlive for bullets = 4.0 so that shouldRemoveBullet can be true
@@ -503,7 +513,7 @@ void UpdateGameLevel(float elapsed) {
 	}
 
 	//Collision and penetration with player and enemies
-	for (size_t i = 0; i < enemies.size(); i++) {
+	for (int i = 0; i < enemies.size(); i++) {
 		/*
 		a) is R1’s bottom higher than R2’s top?
 		b) is R1’s top lower than R2’s bottom?
@@ -521,7 +531,7 @@ void UpdateGameLevel(float elapsed) {
 	}
 
 	//Collision and penetration with player and bricks
-	for (size_t i = 0; i < bricks.size(); i++) {
+	for (int i = 0; i < bricks.size(); i++) {
 		bricks[i].Update(elapsed);
 		//Check Y-penetration
 		/*
@@ -560,7 +570,7 @@ void UpdateGameLevel(float elapsed) {
 	}
 
 	//Collision and penetration with player and ground
-	for (size_t i = 0; i < grounds.size(); i++) {
+	for (int i = 0; i < grounds.size(); i++) {
 		grounds[i].Update(elapsed);
 		//Check Y-penetration
 		/*
@@ -599,9 +609,9 @@ void UpdateGameLevel(float elapsed) {
 	}
 
 	//Collision and penetration with enemies and bricks
-	for (size_t i = 0; i < enemies.size(); i++) {
+	for (int i = 0; i < enemies.size(); i++) {
 		enemies[i].Update(elapsed);
-		for (size_t j = 0; j < bricks.size(); j++) {
+		for (int j = 0; j < bricks.size(); j++) {
 			if (enemies[i].bottom < bricks[j].top && enemies[i].top > bricks[j].bottom && enemies[i].left < bricks[j].right && enemies[i].right > bricks[j].left) {
 				//collidesWith(dynamic value, static value)
 				//Dynamic: gravity applied and checking collisions with other entities.

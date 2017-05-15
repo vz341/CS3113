@@ -52,7 +52,7 @@ GLuint fontSheetTexture;
 
 enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER};
 
-int state;
+int state = 0;
 
 bool start = true;
 
@@ -61,9 +61,9 @@ bool start = true;
 //In setup
 
 float lastFrameTicks = 0.0f;
-float elapsed;
-float lastLaser;
-float lastShot;
+float elapsed = 0.0f;
+float lastLaser = 0.0f;
+float lastShot = 0.0f;
 
 bool leftMovement = false;
 bool rightMovement = false;
@@ -378,13 +378,13 @@ void RenderGameLevel() {
 	program->setModelMatrix(modelMatrix);
 	DrawText(program, fontSheetTexture, "SCORE<1>  HI-SCORE  SCORE<2>", 0.2f, 0.0001f);
 
-	for (size_t i = 0; i < enemies.size(); i++) {
+	for (int i = 0; i < enemies.size(); i++) {
 		enemies[i].Draw(program);
 	}
-	for (size_t i = 0; i < bullets.size(); i++) {
+	for (int i = 0; i < bullets.size(); i++) {
 		bullets[i].Draw(program);
 	}
-	for (size_t i = 0; i < lasers.size(); i++) {
+	for (int i = 0; i < lasers.size(); i++) {
 		lasers[i].Draw(program);
 	}
 
@@ -486,12 +486,12 @@ void UpdateGameLevel(float elapsed) {
 	}
 
 	//Enemies movement
-	for (size_t i = 0; i < enemies.size(); i++) {
+	for (int i = 0; i < enemies.size(); i++) {
 		enemies[i].Update(elapsed);
 		//Enemies move left and move right
 		if ((enemies[i].left < -4.0f && enemies[i].velocity_x < 0) || (enemies[i].right > 4.0f && enemies[i].velocity_x > 0)) {
 			//Reverses direction
-			for (size_t i = 0; i < enemies.size(); i++) {
+			for (int i = 0; i < enemies.size(); i++) {
 				enemies[i].velocity_x = -enemies[i].velocity_x;
 			}
 		}
@@ -509,7 +509,7 @@ void UpdateGameLevel(float elapsed) {
 		shootLaser(enemyToShoot);
 	}
 
-	for (size_t i = 0; i < lasers.size(); i++) {
+	for (int i = 0; i < lasers.size(); i++) {
 		lasers[i].Update(elapsed);
 		//If the lasers' timeAlive is above 3.0f, remove them
 		if (shouldRemoveBullet(lasers[i])) {
@@ -523,9 +523,9 @@ void UpdateGameLevel(float elapsed) {
 	}
 
 	//Updates bullet and hits enemy
-	for (size_t i = 0; i < bullets.size(); i++) {
+	for (int i = 0; i < bullets.size(); i++) {
 		bullets[i].Update(elapsed);
-		for (size_t j = 0; j < enemies.size(); j++) {
+		for (int j = 0; j < enemies.size(); j++) {
 			if (enemies[j].bottom < bullets[i].top && enemies[j].top > bullets[i].bottom && enemies[j].left < bullets[i].right && enemies[j].right > bullets[i].left) {
 				enemies.erase(enemies.begin() + j);
 				//timeAlive for bullets = 4.0 so that shouldRemoveBullet can be true

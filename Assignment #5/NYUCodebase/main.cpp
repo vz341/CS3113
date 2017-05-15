@@ -50,7 +50,7 @@ GLuint fontSheetTexture;
 
 enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER};
 
-int state;
+int state = 0;
 
 bool start = true;
 
@@ -59,13 +59,12 @@ bool start = true;
 //In setup
 
 float lastFrameTicks = 0.0f;
-float elapsed;
+float elapsed = 0.0f;
 
 bool leftMovement = false;
 bool rightMovement = false;
 bool upMovement = false;
 bool downMovement = false;
-bool projectileMovement = false;
 
 GLuint LoadTexture(const char *filePath) {
 	//Use stbi_load function to load the pixel data from an image file.
@@ -381,8 +380,8 @@ void SheetSprite::Draw(ShaderProgram *program, Matrix modelMatrix, float x, floa
 	}
 	//Otherwise,
 	else {
-		//Rotate it by the center plus pi / 1024
-		modelMatrix.Rotate(angle += (3.141592653f / 1024));
+		//Rotate it by the center
+		modelMatrix.Rotate(angle);
 	}
 	program->setModelMatrix(modelMatrix);
 
@@ -418,18 +417,12 @@ public:
 
 		angle = ang;
 
-		//Rotates the four corners based on x and y positions, angle plus pi / 1024, and two intersecting sides
-		corners.push_back(rotateXandY(x, y, angle += (3.141592653f / 1024), Vector(left, top)));
-		corners.push_back(rotateXandY(x, y, angle += (3.141592653f / 1024), Vector(right, top)));
-		corners.push_back(rotateXandY(x, y, angle += (3.141592653f / 1024), Vector(left, bottom)));
-		corners.push_back(rotateXandY(x, y, angle += (3.141592653f / 1024), Vector(right, bottom)));
+		//Rotates the four corners based on x and y positions, angle, and two intersecting sides
+		corners.push_back(rotateXandY(x, y, angle, Vector(left, top)));
+		corners.push_back(rotateXandY(x, y, angle, Vector(right, top)));
+		corners.push_back(rotateXandY(x, y, angle, Vector(left, bottom)));
+		corners.push_back(rotateXandY(x, y, angle, Vector(right, bottom)));
 	}
-
-	void Draw(ShaderProgram *program) {
-		sprite.Draw(program, entityMatrix, x, y, angle);
-	}
-
-	SheetSprite sprite;
 
 	float x;
 	float y;
@@ -449,6 +442,12 @@ public:
 
 	//Initializes the angle
 	float angle;
+
+	void Draw(ShaderProgram *program) {
+		sprite.Draw(program, entityMatrix, x, y, angle);
+	}
+
+	SheetSprite sprite;
 
 	//Adjusts the x and y distances of the entity after collision
 	void collision(float adjustedDistance_x, float adjustedDistance_y) {
