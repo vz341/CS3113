@@ -12,7 +12,10 @@ Final project requirements.
 - Must have at least some animation or particle effects.
 
 Kevin To
+kt1386
+
 Vivian Zhao
+vz341
 
 */
 
@@ -393,6 +396,9 @@ float mapValue(float value, float srcMin, float srcMax, float dstMin, float dstM
 	}
 	return retVal;
 }
+
+//LERP
+//LinEar InteRPolation
 
 float lerp(float from, float to, float time) {
 	return (1.0 - time) * from + time * to;
