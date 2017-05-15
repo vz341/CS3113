@@ -1114,15 +1114,13 @@ int main(int argc, char *argv[])
 		glewInit();
 	#endif
 
-	//Setup
+	//Setup (before the loop)
+
+	glViewport(0, 0, 1280, 720);
+
+	//Need to use a shader program that supports textures!
 	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
-
-	projectionMatrix.setOrthoProjection(-4.25f, 4.25f, -2.25f, 2.25f, -1.0f, 1.0f);
 	
-	program->setModelMatrix(modelMatrix);
-	program->setProjectionMatrix(projectionMatrix);
-	program->setViewMatrix(viewMatrix);
-
 	//Load sprite sheets and textures
 	backgroundSheet = LoadTexture(RESOURCE_FOLDER"More State Screens_03.png");
 	fontSheet = LoadTexture(RESOURCE_FOLDER"font1.png");
@@ -1132,6 +1130,13 @@ int main(int argc, char *argv[])
 	boneSheet = LoadTexture(RESOURCE_FOLDER"Bone Sheet Sprites.png");
 	groundSheet = LoadTexture(RESOURCE_FOLDER"slice33_33.png");
 	buildingSheet = LoadTexture(RESOURCE_FOLDER"Building Sheet Sprites.png");
+
+	projectionMatrix.setOrthoProjection(-4.25f, 4.25f, -2.25f, 2.25f, -1.0f, 1.0f);
+
+	//Drawing (in your game loop)
+	program->setModelMatrix(modelMatrix);
+	program->setProjectionMatrix(projectionMatrix);
+	program->setViewMatrix(viewMatrix);
 
 	//int Mix_OpenAudio(int frequency, Uint16 format, int channels, int chunksize);
 	//Initializes SDL_mixer with frequency, format, channel and buffer size.

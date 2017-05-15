@@ -463,9 +463,17 @@ void UpdateGameLevel(float elapsed) {
 
 	if (leftMovement) {
 		player.velocity_x = -3.0;
+		if (player.left < -4.0f && player.velocity_x < 0) {
+			//Reverses direction
+			player.velocity_x = -player.velocity_x;
+		}
 	}
 	if (rightMovement) {
 		player.velocity_x = 3.0;
+		if (player.right > 4.0f && player.velocity_x > 0) {
+			//Reverses direction
+			player.velocity_x = -player.velocity_x;
+		}
 	}
 	if (projectileMovement) {
 		//Shoots every 0.4f or waits until 0.4f to shoot again
