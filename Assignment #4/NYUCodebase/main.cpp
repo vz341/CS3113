@@ -50,7 +50,7 @@ GLuint fontSheetTexture;
 
 enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER };
 
-int state = 0.0f;
+int state = 0.0;
 
 bool start = true;
 
