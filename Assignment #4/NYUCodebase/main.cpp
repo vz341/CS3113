@@ -48,9 +48,9 @@ Matrix viewMatrix;
 GLuint spriteSheetTexture;
 GLuint fontSheetTexture;
 
-enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER};
+enum GameState { STATE_MAIN_MENU, STATE_GAME_LEVEL, STATE_GAME_OVER };
 
-int state;
+int state = 0.0f;
 
 bool start = true;
 
@@ -59,8 +59,8 @@ bool start = true;
 //In setup
 
 float lastFrameTicks = 0.0f;
-float elapsed;
-float lastShot;
+float elapsed = 0.0f;
+float lastShot = 0.0f;
 
 bool leftMovement = false;
 bool rightMovement = false;
@@ -309,7 +309,7 @@ public:
 
 		top += velocity_y * elapsed;
 		bottom += velocity_y * elapsed;
-		
+
 		timeAlive += elapsed;
 	}
 };
@@ -329,7 +329,8 @@ void shootBullet() {
 bool shouldRemoveBullet(Entity bullet) {
 	if (bullet.timeAlive > 3.0) {
 		return true;
-	} else {
+	}
+	else {
 		return false;
 	}
 }
@@ -381,79 +382,87 @@ void initializeEntities() {
 	title = Entity(0.0, 1.3, 0.0, 0.0, false);
 	title.sprite = SheetSprite(spriteSheetTexture, 0.0f / 2048.0f, 265.0f / 512.0f, 438.0f / 2048.0f, 228.0f / 512.0f, 4.0, 2.0);
 
-	player = Entity(0.0, 0.0, 0.0, -1.0, true);
-	player.sprite = SheetSprite(spriteSheetTexture, 474.0f / 2048.0f, 319.0f / 512.0f, 30.0f / 2048.0f, 22.0f / 512.0f, 0.2, 0.2);
+	player = Entity(0.0, 1.0, 0.0, -1.0, true);
+	player.sprite = SheetSprite(spriteSheetTexture, 474.0f / 2048.0f, 319.0f / 512.0f, 30.0f / 2048.0f, 22.0f / 512.0f, 0.5, 0.5);
 
-	Entity smallEnemy(1.0f, -0.6, 0.0, 0.0, false);
-	smallEnemy.sprite = SheetSprite(spriteSheetTexture, 474.0f / 2048.0f, 343.0f / 512.0f, 28.0f / 2048.0f, 30.0f / 512.0f, 0.2, 0.2);
+	Entity smallEnemy(1.0f, 1.0f, 0.0, 0.0, true);
+	smallEnemy.sprite = SheetSprite(spriteSheetTexture, 474.0f / 2048.0f, 343.0f / 512.0f, 28.0f / 2048.0f, 30.0f / 512.0f, 0.5, 0.5);
 	enemies.push_back(smallEnemy);
 
-	Entity largeEnemy(1.5f, -0.5, 0.0, 0.0, false);
-	largeEnemy.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 265.0f / 512.0f, 52.0f / 2048.0f, 52.0f / 512.0f, 0.4, 0.4);
+	Entity largeEnemy(1.5f, 1.0f, 0.0, 0.0, true);
+	largeEnemy.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 265.0f / 512.0f, 52.0f / 2048.0f, 52.0f / 512.0f, 0.5, 0.5);
 	enemies.push_back(largeEnemy);
 
 	for (int i = 0; i < 50; i++) {
-		Entity brick(-4.0f + (i * 0.2), -0.8, 0.0, 0.0, false);
-		brick.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 387.0f / 512.0f, 32.0f / 2048.0f, 32.0f / 512.0f, 0.2, 0.2);
+		Entity brick(-4.0f + (i * 0.5), 0.0, 0.0, 0.0, false);
+		brick.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 387.0f / 512.0f, 32.0f / 2048.0f, 32.0f / 512.0f, 0.5, 0.5);
 		bricks.push_back(brick);
 	}
 
 	for (int i = 0; i < 50; i++) {
-		Entity ground(-4.0f + (i * 0.2), -1.0, 0.0, 0.0, false);
-		ground.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 319.0f / 512.0f, 32.0f / 2048.0f, 32.0f / 512.0f, 0.2, 0.2);
+		Entity ground(-4.0f + (i * 0.5), -0.5, 0.0, 0.0, false);
+		ground.sprite = SheetSprite(spriteSheetTexture, 440.0f / 2048.0f, 319.0f / 512.0f, 32.0f / 2048.0f, 32.0f / 512.0f, 0.5, 0.5);
 		grounds.push_back(ground);
 	}
 }
 
 //Is called when colliding
 //Check full box/box collision against all entities.
-void collidesWith(Entity& entOne, Entity& entTwo) {
+void collidesWith(Entity& entOne, Entity& entTwo, bool doY) {
 	float penetration;
-	//If collided, check Y-penetration
+	//penetration = how much is overlapping and then add the adjustment
+	//If the distance between the two entities is less than or equal to the sum of their half heights, then the entities are colliding!
+	//Move on Y-axis by the ammount of penetration + tiny amount.
+	//(Move up if above the other entity, otherwise move down!)
+
+	//check Y-penetration
 	//Checks y-axis collison or overlap or penetration
 	//If entOne's bottom lower than entTwo's top or entOne's top higher than entTwo's bottom
 	//The entities are intersecting.
-	if (entOne.bottom < entTwo.top || entOne.top > entTwo.bottom) {
-		//Calculates the distance overlap with float absolute value
+	if (doY) {
+		//Calculates the distance betwween the entities
 		float distance = fabs(entOne.y - entTwo.y);
-		//penetration = how much is overlapping and then add the adjustment
-		//If the distance between the two entities is less than or equal to the sum of their half heights, then the entities are colliding!
-		//Move on Y-axis by the ammount of penetration + tiny amount.
-		//(Move up if above the other entity, otherwise move down!)
-		penetration = fabs(distance - entOne.sprite.size_y / 2 - entTwo.sprite.size_y / 2) + 0.001f;
-
-		//Checks for collision on the bottom
-		if (entOne.y > entTwo.y) {
-			//Moves the entity's y-coordinate by the penetration value
+		//If entOne's bottom lower than entTwo's top, and if entTwo's top is less than entOne's top
+		if (entOne.bottom < entTwo.top && entTwo.top < entOne.top) {
+			float distance = fabs(entOne.y - entTwo.y);
+			// calculate overlap 
+			//if (fabs(entOne.top + entTwo.top) < (entOne.sprite.size_y / 2 + entTwo.sprite.size_y / 2)) {
+			penetration = fabs(distance - entOne.sprite.size_y / 2 - entTwo.sprite.size_y / 2) + 0.001f;
 			entOne.collisionY(penetration);
+			//}
 		}
-		//Checks for collision on the top
-		else {
-			//Pushes down the enttity
-			entOne.collisionY(-penetration);
+		//checks if entOne's top higher than entTwo's bottom,  and if entOne's top is less than entTwo's top
+		else if (entTwo.bottom < entOne.top &&  entOne.top < entTwo.top) {
+			float distance = fabs(entOne.y - entTwo.y);
+			// calculate overlap 
+			if (fabs(entOne.bottom + entTwo.bottom) >(entOne.sprite.size_y / 2 + entTwo.sprite.size_y / 2)) {
+				penetration = fabs(distance - entOne.sprite.size_y / 2 - entTwo.sprite.size_y / 2) + 0.001f;
+				entOne.collisionY(-penetration);
+			}
 		}
 	}
-	//If collided, check X-penetration
+	//check X-penetration
 	//Checks x-axis collison or overlap or penetration
 	//Otherwise, if entOne's left is smaller than entTwo's right or entOne's right is larger than entTwo's left
 	//The entities are intersecting.
-	else if (entOne.left < entTwo.right || entOne.right > entTwo.left) {
-		//Calculates the distance overlap with float absolute value
-		float distance = fabs(entOne.x - entTwo.x);
-		//penetration = how much is overlapping and then add the adjustment
-		//If the distance between the two entities is less than or equal to the sum of their half lengths, then the entities are colliding!
-		//Move on X-axis by the ammount of penetration + tiny amount.
-		//(Move left if to the left of the other entity, otherwise move right!)
-		penetration = fabs(distance - entOne.sprite.size_x/2 - entTwo.sprite.size_x/2) + 0.001f;
-		//Checks for collision on the left
-		if (entOne.x > entTwo.x) {
-			//Moves the entity's x-coordinate by the penetration value to the right
-			entOne.collisionX(penetration);
+	else {
+		//checks if entTwo's right higher than entOne's left,  and if entTwo's right is less than entOne's right
+		if (entOne.left < entTwo.right && entTwo.right < entOne.right) {
+			float distance = fabs(entOne.x - entTwo.x);
+			// calculate overlap 
+			if (fabs(entOne.right + entTwo.right)  < fabs(entOne.sprite.size_x / 2 + entTwo.sprite.size_x / 2)) {
+				penetration = fabs(distance - entOne.sprite.size_x / 2 - entTwo.sprite.size_x / 2) + 0.001f;
+				entOne.collisionX(penetration);
+			}
 		}
-		//Checks for collision on the right
-		else {
-			//Reverses
-			entOne.collisionX(-penetration);
+		//checks if entOne's right higher than entTwo's left,  and if entOne's right is less than entTwo's right
+		else if (entTwo.left < entOne.right && entOne.right < entTwo.right) {
+			float distance = fabs(entOne.x - entTwo.x);
+			// calculate overlap 
+			if (fabs(entOne.left + entTwo.left) > fabs(entOne.sprite.size_x / 2 + entTwo.sprite.size_x / 2)) {
+				penetration = fabs(distance - entOne.sprite.size_x / 2 - entTwo.sprite.size_x / 2) + 0.001f;
+				entOne.collisionX(-penetration);
+			}
 		}
 	}
 }
@@ -492,8 +501,17 @@ void UpdateGameLevel(float elapsed) {
 				enemies[i].velocity_x = -enemies[i].velocity_x;
 			}
 		}
+
+		for (size_t j = 0; j < bricks.size(); j++) {
+			if (enemies[i].bottom < bricks[j].top && enemies[i].top >bricks[j].bottom && enemies[i].left <bricks[j].right && enemies[i].right > bricks[j].left) {
+				//collidesWith(dynamic value, static value)
+				//Dynamic: gravity applied and checking collisions with other entities.
+				//Static: No gravity, no movement, no collision checking!
+				collidesWith(enemies[i], bricks[j], true);
+			}
+		}
 	}
-	
+
 	//Updates bullet and hits enemy
 	for (size_t i = 0; i < bullets.size(); i++) {
 		bullets[i].Update(elapsed);
@@ -514,18 +532,26 @@ void UpdateGameLevel(float elapsed) {
 	for (size_t i = 0; i < enemies.size(); i++) {
 		if (!(player.bottom > enemies[i].top || player.top < enemies[i].bottom || player.left > enemies[i].right || player.right < enemies[i].left)) {
 			//collidesWith(dynamic value, static value)
-			collidesWith(player, enemies[i]);
+			collidesWith(player, enemies[i], true);
 		}
 	}
 
 	//Collision and penetration with player and the ground
 	for (size_t i = 0; i < grounds.size(); i++) {
 		grounds[i].Update(elapsed);
-		if (player.bottom < grounds[i].top && player.top > grounds[i].bottom && player.left < grounds[i].right && player.right > grounds[i].left) {
+		//y collision check
+		if (!(player.bottom > grounds[i].top || player.top < grounds[i].bottom || player.left > grounds[i].right || player.right < grounds[i].left)) {
 			//collidesWith(dynamic value, static value)
 			//Dynamic: gravity applied and checking collisions with other entities.
 			//Static: No gravity, no movement, no collision checking!
-			collidesWith(player, grounds[i]);
+			collidesWith(player, grounds[i], true);
+		}
+		//x collision check
+		if (!(player.bottom > grounds[i].top || player.top < grounds[i].bottom || player.left > grounds[i].right || player.right < grounds[i].left)) {
+			//collidesWith(dynamic value, static value)
+			//Dynamic: gravity applied and checking collisions with other entities.
+			//Static: No gravity, no movement, no collision checking!
+			collidesWith(player, grounds[i], false);
 		}
 	}
 
@@ -536,7 +562,13 @@ void UpdateGameLevel(float elapsed) {
 			//collidesWith(dynamic value, static value)
 			//Dynamic: gravity applied and checking collisions with other entities.
 			//Static: No gravity, no movement, no collision checking!
-			collidesWith(player, bricks[i]);
+			collidesWith(player, bricks[i], true);
+		}
+		if (player.bottom < bricks[i].top && player.top > bricks[i].bottom && player.left < bricks[i].right && player.right > bricks[i].left) {
+			//collidesWith(dynamic value, static value)
+			//Dynamic: gravity applied and checking collisions with other entities.
+			//Static: No gravity, no movement, no collision checking!
+			collidesWith(player, bricks[i], false);
 		}
 	}
 
